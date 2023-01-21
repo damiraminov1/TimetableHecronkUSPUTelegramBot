@@ -1,9 +1,9 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, create_engine
+from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker, scoped_session
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 Base = declarative_base()
-engine = create_engine('sqlite:///sqlite3.db', echo=True)
+engine = create_engine('sqlite:///../../sqlite3.db', echo=True)
 Base.metadata.bind = engine
 session = scoped_session(sessionmaker())(bind=engine)
 
@@ -17,6 +17,3 @@ class User(Base):
 
     def __repr__(self):
         return '<User {}>'.format(self.code)
-
-
-Base.metadata.create_all(engine)

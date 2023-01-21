@@ -1,11 +1,12 @@
-import aiogram.utils.exceptions
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram.utils import exceptions, executor
+from aiogram import Bot, Dispatcher, types
 import ast
 import itertools
 
+
 from config import TelegramBotConfig, ParserConfig
 from app.parser.parser import Parser
-from app.models import User, session
+from app.models.models import User, session
 
 bot = Bot(token=TelegramBotConfig.TOKEN)
 dp = Dispatcher(bot)
@@ -57,7 +58,7 @@ async def callback_handler(callback: types.CallbackQuery):
                                         types.InlineKeyboardButton(f'Вперед', callback_data=f'group_page={number+1}'))
                 try:
                     await callback.message.edit_reply_markup(reply_markup=markup)
-                except aiogram.utils.exceptions.MessageNotModified:
+                except exceptions.MessageNotModified:
                     pass
         elif callback.data in Parser.get_groups(ParserConfig.URL):
             if not session.query(User).filter(User.telegram_id == callback.from_user.id).first():
@@ -78,11 +79,8 @@ async def callback_handler(callback: types.CallbackQuery):
                                          day=day)
             result = content['update'] + '\n' + day['week'] + ' ' + day['date'] + '\n' * 2
             for i in range(len(content['content'])):
-                result += 'Время: ' + content['content'][i]['time'] + '\n' + 'Предмет: ' + content['content'][i][
-                    'lesson_name + auditorium'] + (
-                              '\n' + content['content'][i]['subgroup'].title() if content['content'][i][
-                                                                                      'subgroup'] != '' else '') + '\n' + \
-                          content['content'][i]['teacher'] + '\n' * 2
+                result += 'Время: ' + content['content'][i]['time'] + '\n' + 'Предмет: ' + content['content']
+                # TODO: переписать алгоритм на отображение просто всех данных, доступных при парсинге
             await callback.message.answer(result)
         elif callback.data == '/start':
             await start(message=callback.message)

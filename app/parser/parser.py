@@ -1,16 +1,18 @@
-import requests
+from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 from config import ParserConfig
 
 
 class Parser:
     @staticmethod
-    def _get_html(url) -> requests:
-        html = requests.get(url, headers=ParserConfig.HEADERS)
-        if Parser._server_is_respond(html):
-            return html
+    def _get_html(url):
+        session = HTMLSession()
+        r = session.get(url=url)
+        r.html.render(timeout=20, sleep=1)
+        if Parser._server_is_respond(r):
+            return r.html.html
         else:
-            raise ConnectionError('Status code = {code}'.format(code=html.status_code))
+            raise ConnectionError('Status code = {code}'.format(code=r.status_code))
 
     @staticmethod
     def _server_is_respond(html) -> bool:
@@ -19,7 +21,7 @@ class Parser:
     @staticmethod
     def _get_soup(url: str) -> BeautifulSoup or str:
         try:
-            soup = BeautifulSoup(Parser._get_html(url).text, 'html.parser')
+            soup = BeautifulSoup(Parser._get_html(url), 'html.parser')
             return soup
         except ConnectionError:
             return "Can't Parse!"
@@ -32,7 +34,7 @@ class Parser:
 
     @staticmethod
     def get_available_days(url: str, group: str):
-        soup = Parser._get_soup(url=url+group)
+        soup = Parser._get_soup(url=url + group)
         stud_r = soup.find('div', attrs={'class': 'stud-r'})
         items = stud_r.find_all('div', attrs={'class': 'rasp-item'})
         days = list()
@@ -45,26 +47,26 @@ class Parser:
 
     @staticmethod
     def get_content(url: str, group: str, day: dict):
-        soup = Parser._get_soup(url=url+group)
+        soup = Parser._get_soup(url=url + group)
         stud_r = soup.find('div', attrs={'class': 'stud-r'})
-        items = stud_r.find_all('div', attrs={'class': 'rasp-item'})[Parser.get_available_days(url, group).index(day)]  # paste here day
+        items = stud_r.find_all('div', attrs={'class': 'rasp-item'})[
+            Parser.get_available_days(url, group).index(day)]  # paste here day
         lessons_count = len(items.find_all('span', attrs={'class': 'para-time'}))
         lessons = list()
         for i in range(lessons_count):
-            data = items.find_all('p')[i].getText().split('\n') # list with lesson, auditorium, teacher, subgroup
+            data = items.find_all('p')[i].getText().split('\n')  # list with lesson, auditorium, teacher, subgroup
             lessons.append({
-                'time': items.find_all('span', attrs={'class': 'para-time'})[i].getText(),  # paste here para time by index,
-                'lesson_name + auditorium': data[0],
-                'teacher': data[1],
-                'subgroup': data[2]
+                'time': items.find_all('span', attrs={'class': 'para-time'})[i].getText(),
+                # paste here para time by index,
+                'content': data
             })
         result = {
             'update': stud_r.find('script').get_text().split(r"$('.stud-r .rasp-update').html('")[1][:-8],
-            'content': lessons
+            'lessons': lessons
         }
         return result
 
 
 # EXAMPLES
-# print(Parser.get_available_days(url=ParserConfig.URL, group='ФК-2132'))
-# print(Parser.get_content(url=ParserConfig.URL, group='ГИ-2031', day={'date': '01 сентября', 'week': 'Чт'}))
+print(Parser.get_available_days(url=ParserConfig.URL, group='РиА-1931'))
+print(Parser.get_content(url=ParserConfig.URL, group='РиА-1931', day={'date': '06 февраля', 'week': 'Пн'}))
