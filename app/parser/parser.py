@@ -1,6 +1,7 @@
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
-from config import ParserConfig
+
+from config import Config
 
 
 class Parser:
@@ -68,5 +69,5 @@ class Parser:
 
 
 # EXAMPLES
-print(Parser.get_available_days(url=ParserConfig.URL, group='РиА-1931'))
-print(Parser.get_content(url=ParserConfig.URL, group='РиА-1931', day={'date': '06 февраля', 'week': 'Пн'}))
+# print(Parser.get_available_days(url=Config.URL, group='РиА-1931'))
+# print(Parser.get_content(url=Config.URL, group='РиА-1931', day={'date': '06 февраля', 'week': 'Пн'}))
